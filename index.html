@@ -243,35 +243,60 @@
       backdrop-filter: blur(10px);
     }
 
-    /* Memories timeline */
+    /* Timeline (çakışmasız, satır satır) */
     .timeline{
-      margin-top: 34px;
-      display:grid;
-      grid-template-columns: 1fr 60px 1fr;
-      gap: 18px;
-      align-items:start;
+    margin-top: 34px;
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 70px 1fr;
+    gap: 18px 18px;
+    align-items: start;
     }
-    .line{
-      position:relative;
-      height: 100%;
-      min-height: 520px;
-      display:flex;
-      justify-content:center;
+
+    /* Orta çizgi */
+    .timeline::before{
+    content:"";
+    position:absolute;
+    top:0; bottom:0;
+    left:50%;
+    transform: translateX(-50%);
+    width:2px;
+    background: linear-gradient(180deg, transparent, rgba(215,179,90,.55), transparent);
     }
-    .line::before{
-      content:"";
-      position:absolute;
-      top:0; bottom:0;
-      width:2px;
-      background: linear-gradient(180deg, transparent, rgba(215,179,90,.55), transparent);
-      opacity:.9;
+
+    /* Her item kendi satırında */
+    .t-item{
+    display: contents; /* bu kritik: item'i grid satırı gibi kullanır */
     }
-    .dot{
-      width:10px; height:10px;
-      border-radius:999px;
-      background: var(--gold);
-      box-shadow: 0 0 0 6px rgba(215,179,90,.16);
-      position:absolute;
+
+    .t-dot{
+    grid-column: 2;
+    justify-self: center;
+    align-self: start;
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--gold);
+    box-shadow: 0 0 0 6px rgba(215,179,90,.16);
+    margin-top: 26px;
+    }
+
+    .t-left{ grid-column: 1; justify-self: start; }
+    .t-right{ grid-column: 3; justify-self: end; }
+
+    /* Kart zaten sende var: .mem-card kullanıyoruz */
+    .t-left .mem-card, .t-right .mem-card{ width:min(420px, 100%); }
+
+    /* Mobilde tek kolon */
+    @media (max-width: 780px){
+    .timeline{
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .timeline::before{ left: 14px; transform:none; }
+    .t-dot{ grid-column: 1; justify-self: start; margin-left: 10px; }
+    .t-left, .t-right{ grid-column: 1; justify-self: stretch; }
+    .t-left .mem-card, .t-right .mem-card{ width: 100%; }
     }
 
     .mem-card{
@@ -476,14 +501,8 @@
         <h1>Değerli Anılarımız</h1>
         <p class="sub">Evlilik tarihi 21 Temmuz burayada yazdım.</p>
 
-        <div class="timeline" id="timeline">
-          <div id="leftCol" style="display:flex; flex-direction:column; gap:22px; align-items:flex-start;"></div>
-          <div class="line" aria-hidden="true">
-            <span class="dot" style="top: 120px;"></span>
-            <span class="dot" style="top: 320px;"></span>
-          </div>
-          <div id="rightCol" style="display:flex; flex-direction:column; gap:22px; align-items:flex-end; padding-top:140px;"></div>
-        </div>
+        <div class="timeline" id="timelineList"></div>
+
 
         <div class="footer-heart">♥</div>
       </div>
@@ -646,27 +665,42 @@
     /**************
      * ANILAR OLUŞTUR
      **************/
-    const left = document.getElementById("leftCol");
-    const right = document.getElementById("rightCol");
+const timelineList = document.getElementById("timelineList");
 
-    function memCard(m){
-      const el = document.createElement("div");
-      el.className = "mem-card";
-      el.innerHTML = `
-        <div class="mem-meta">
-          <div class="badge">${m.icon}</div>
-          <span>${m.date}</span>
-        </div>
-        <h3>${m.title}</h3>
-        <p>${m.text}</p>
-      `;
-      return el;
-    }
+function memCard(m){
+  const el = document.createElement("div");
+  el.className = "mem-card";
+  el.innerHTML = `
+    <div class="mem-meta">
+      <div class="badge">${m.icon}</div>
+      <span>${m.date}</span>
+    </div>
+    <h3>${m.title}</h3>
+    <p>${m.text}</p>
+  `;
+  return el;
+}
 
-    CONFIG.memories.forEach(m => {
-      if(m.side === "right") right.appendChild(memCard(m));
-      else left.appendChild(memCard(m));
-    });
+CONFIG.memories.forEach((m, idx) => {
+  // side yoksa otomatik sırayla sağ/sol yap
+  const side = m.side || (idx % 2 === 0 ? "left" : "right");
+
+  const row = document.createElement("div");
+  row.className = "t-item";
+
+  const dot = document.createElement("div");
+  dot.className = "t-dot";
+
+  const holder = document.createElement("div");
+  holder.className = side === "right" ? "t-right" : "t-left";
+  holder.appendChild(memCard(m));
+
+  row.appendChild(holder);
+  row.appendChild(dot);
+
+  timelineList.appendChild(row);
+});
+
 
     /**************
      * MODAL
