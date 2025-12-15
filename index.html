@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Yağmur & Erberk</title>
+
+  <!-- Google Fonts benzeri hissiyat (sade, zarif) -->
+  <style>
+    :root{
+      --bg1:#0a0c10;
+      --bg2:#07080b;
+      --card: rgba(255,255,255,.04);
+      --card2: rgba(255,255,255,.06);
+      --stroke: rgba(255,255,255,.08);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.62);
+      --muted2: rgba(255,255,255,.42);
+      --gold: #d7b35a;
+      --shadow: 0 18px 60px rgba(0,0,0,.55);
+      --radius: 22px;
+      --radius2: 18px;
+      --max: 1100px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-serif, Georgia, "Times New Roman", Times, serif;
+      color: var(--text);
+      background: radial-gradient(1200px 600px at 50% 35%, rgba(255,255,255,.06), transparent 60%),
+                  linear-gradient(180deg, var(--bg1), var(--bg2));
+      overflow-x:hidden;
+    }
+
+    /* Star canvas behind everything */
+    #stars{
+      position:fixed;
+      inset:0;
+      z-index:-2;
+      width:100%;
+      height:100%;
+      display:block;
+    }
+
+    /* soft vignette */
+    .vignette{
+      position:fixed; inset:0; z-index:-1;
+      background: radial-gradient(900px 500px at 50% 40%, transparent 0%, rgba(0,0,0,.35) 55%, rgba(0,0,0,.7) 100%);
+      pointer-events:none;
+    }
+
+    /* Top nav */
+    .nav{
+      position:fixed; top:0; left:0; right:0;
+      z-index:20;
+      backdrop-filter: blur(10px);
+      background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.08));
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .nav-inner{
+      max-width: var(--max);
+      margin:0 auto;
+      padding: 16px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      letter-spacing: .14em;
+      font-size: 14px;
+      color: rgba(255,255,255,.86);
+      user-select:none;
+    }
+    .brand .heart{
+      width:14px; height:14px;
+      display:inline-grid; place-items:center;
+      color: var(--gold);
+      filter: drop-shadow(0 0 8px rgba(215,179,90,.25));
+    }
+    .brand strong{font-weight:600}
+
+    .tabs{
+      display:flex; gap:24px;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      font-size: 13px;
+      letter-spacing:.02em;
+    }
+    .tab{
+      color: rgba(255,255,255,.62);
+      text-decoration:none;
+      padding: 8px 6px;
+      position:relative;
+      transition: .2s ease;
+    }
+    .tab:hover{color: rgba(255,255,255,.85)}
+    .tab.active{
+      color: var(--gold);
+    }
+    .tab.active::after{
+      content:"";
+      position:absolute;
+      left:0; right:0; bottom:-10px;
+      height:2px;
+      background: linear-gradient(90deg, transparent, rgba(215,179,90,.8), transparent);
+    }
+
+    /* Page sections */
+    main{padding-top: 78px;}
+    section{
+      min-height: calc(100vh - 78px);
+      display:none;
+      padding: 56px 18px 80px;
+    }
+    section.active{display:block;}
+    .wrap{max-width: var(--max); margin:0 auto;}
+
+    .kicker{
+      display:flex; align-items:center; justify-content:center; gap:10px;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      font-size: 12px;
+      letter-spacing: .32em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.48);
+      margin-top: 30px;
+    }
+    .kicker .spark{color: var(--gold); opacity:.95}
+    h1{
+      margin: 14px 0 10px;
+      font-size: clamp(36px, 5vw, 64px);
+      text-align:center;
+      font-weight: 500;
+      letter-spacing: .01em;
+    }
+    .sub{
+      text-align:center;
+      max-width: 560px;
+      margin: 0 auto 34px;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color: rgba(255,255,255,.55);
+      line-height: 1.6;
+    }
+
+    /* Card */
+    .panel{
+      margin: 34px auto 0;
+      padding: 26px;
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: var(--shadow);
+      position:relative;
+      overflow:hidden;
+    }
+    .panel::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(700px 220px at 50% 0%, rgba(215,179,90,.12), transparent 60%),
+        radial-gradient(600px 280px at 20% 30%, rgba(255,255,255,.08), transparent 70%),
+        radial-gradient(600px 280px at 80% 50%, rgba(255,255,255,.06), transparent 70%);
+      pointer-events:none;
+      opacity:.65;
+    }
+    .panel-inner{position:relative; z-index:1;}
+
+    .together{
+      text-align:center;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color: rgba(255,255,255,.62);
+      font-size: 13px;
+      margin-bottom: 18px;
+    }
+    .together b{color: var(--gold); font-weight:600}
+
+    .counter{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .box{
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.18);
+      padding: 18px 14px;
+      text-align:center;
+    }
+    .num{
+      font-family: ui-serif, Georgia, "Times New Roman", Times, serif;
+      font-size: clamp(28px, 4vw, 42px);
+      color: rgba(255,255,255,.90);
+      letter-spacing:.02em;
+    }
+    .lbl{
+      margin-top: 6px;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      font-size: 12px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.50);
+    }
+
+    /* Gallery */
+    .grid{
+      margin-top: 36px;
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+    .photo{
+      border-radius: var(--radius);
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+      box-shadow: 0 18px 40px rgba(0,0,0,.35);
+      cursor:pointer;
+      transition: transform .2s ease, border-color .2s ease;
+      position:relative;
+    }
+    .photo:hover{
+      transform: translateY(-4px);
+      border-color: rgba(215,179,90,.22);
+    }
+    .photo img{
+      width:100%;
+      height: 320px;
+      object-fit: cover;
+      display:block;
+      filter: saturate(1.05) contrast(1.05);
+    }
+    .photo .cap{
+      position:absolute; left:14px; right:14px; bottom:14px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(0,0,0,.45);
+      border: 1px solid rgba(255,255,255,.10);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      font-size: 12px;
+      color: rgba(255,255,255,.78);
+      backdrop-filter: blur(10px);
+    }
+
+    /* Memories timeline */
+    .timeline{
+      margin-top: 34px;
+      display:grid;
+      grid-template-columns: 1fr 60px 1fr;
+      gap: 18px;
+      align-items:start;
+    }
+    .line{
+      position:relative;
+      height: 100%;
+      min-height: 520px;
+      display:flex;
+      justify-content:center;
+    }
+    .line::before{
+      content:"";
+      position:absolute;
+      top:0; bottom:0;
+      width:2px;
+      background: linear-gradient(180deg, transparent, rgba(215,179,90,.55), transparent);
+      opacity:.9;
+    }
+    .dot{
+      width:10px; height:10px;
+      border-radius:999px;
+      background: var(--gold);
+      box-shadow: 0 0 0 6px rgba(215,179,90,.16);
+      position:absolute;
+    }
+
+    .mem-card{
+      border-radius: var(--radius);
+      padding: 18px 18px 16px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.035);
+      box-shadow: 0 18px 40px rgba(0,0,0,.35);
+      max-width: 420px;
+    }
+    .mem-meta{
+      display:flex; align-items:center; gap:10px;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color: rgba(255,255,255,.62);
+      font-size: 12px;
+      letter-spacing:.04em;
+      margin-bottom: 10px;
+    }
+    .badge{
+      width:28px; height:28px;
+      border-radius: 12px;
+      display:grid; place-items:center;
+      background: rgba(215,179,90,.12);
+      border: 1px solid rgba(215,179,90,.25);
+      color: var(--gold);
+    }
+    .mem-card h3{
+      margin: 0 0 8px;
+      font-weight: 500;
+      font-size: 18px;
+      letter-spacing:.01em;
+    }
+    .mem-card p{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color: rgba(255,255,255,.58);
+      line-height:1.7;
+      font-size: 13px;
+    }
+
+    /* Modal */
+    .modal{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.68);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+      z-index:50;
+      backdrop-filter: blur(8px);
+    }
+    .modal.open{display:flex;}
+    .modal-card{
+      width: min(980px, 100%);
+      border-radius: 22px;
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(20,20,24,.75);
+      box-shadow: 0 30px 90px rgba(0,0,0,.65);
+      position:relative;
+    }
+    .modal-card img{
+      width:100%;
+      max-height: 78vh;
+      object-fit: contain;
+      display:block;
+      background: rgba(0,0,0,.35);
+    }
+    .close{
+      position:absolute;
+      top: 12px; right: 12px;
+      width: 38px; height: 38px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.35);
+      color: rgba(255,255,255,.85);
+      cursor:pointer;
+      font-size: 18px;
+      display:grid; place-items:center;
+      transition:.2s ease;
+    }
+    .close:hover{transform: translateY(-1px); border-color: rgba(215,179,90,.25); color: var(--gold);}
+
+    /* Footer heart */
+    .footer-heart{
+      display:flex; justify-content:center;
+      margin-top: 40px;
+      opacity:.85;
+      color: var(--gold);
+      filter: drop-shadow(0 0 12px rgba(215,179,90,.18));
+      font-size: 18px;
+    }
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .grid{grid-template-columns: repeat(2, minmax(0, 1fr));}
+      .timeline{grid-template-columns: 1fr 50px 1fr;}
+    }
+    @media (max-width: 640px){
+      .counter{grid-template-columns: repeat(2, minmax(0,1fr));}
+      .grid{grid-template-columns: 1fr;}
+      .photo img{height: 280px;}
+      .timeline{grid-template-columns: 1fr;}
+      .line{display:none;}
+      .mem-card{max-width: 100%;}
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="stars"></canvas>
+  <div class="vignette"></div>
+
+  <header class="nav">
+    <div class="nav-inner">
+      <div class="brand">
+        <span class="heart">♥</span>
+        <strong id="brandText">Y & E</strong>
+      </div>
+
+      <nav class="tabs" aria-label="Sayfalar">
+        <a class="tab active" href="#anasayfa" data-page="home">Ana Sayfa</a>
+        <a class="tab" href="#galeri" data-page="gallery">Galeri</a>
+        <a class="tab" href="#anilar" data-page="memories">Anılar</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- HOME -->
+    <section id="home" class="active">
+      <div class="wrap">
+        <div class="kicker"><span class="spark">✦</span> YILDIZLARDA YAZILI <span class="spark">✦</span></div>
+        <h1><span id="nameA">Yağmur</span> &amp; <span id="nameB">Erberk</span></h1>
+        <p class="sub">Birlikte geçirdiğimiz her saniye, takımyıldızımızda bir yıldız.</p>
+
+        <div class="panel">
+          <div class="panel-inner">
+            <div class="together">
+              Birlikte olduğumuz tarih: <b id="anniversaryText">29 Ekim 2025</b>
+            </div>
+
+            <div class="counter" aria-label="İlişki sayacı">
+              <div class="box">
+                <div class="num" id="days">00</div>
+                <div class="lbl">Gün</div>
+              </div>
+              <div class="box">
+                <div class="num" id="hours">00</div>
+                <div class="lbl">Saat</div>
+              </div>
+              <div class="box">
+                <div class="num" id="mins">00</div>
+                <div class="lbl">Dakika</div>
+              </div>
+              <div class="box">
+                <div class="num" id="secs">00</div>
+                <div class="lbl">Saniye</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-heart">♥</div>
+      </div>
+    </section>
+
+    <!-- GALLERY -->
+    <section id="gallery">
+      <div class="wrap">
+        <div class="kicker"><span class="spark">📷</span> YAKALANAN ANLAR</div>
+        <h1>Galerimiz</h1>
+        <p class="sub">Zamanda dondurulmuş en sevdiğimiz anların koleksiyonu.</p>
+
+        <div class="grid" id="galleryGrid"></div>
+
+        <div class="footer-heart">♥</div>
+      </div>
+    </section>
+
+    <!-- MEMORIES -->
+    <section id="memories">
+      <div class="wrap">
+        <div class="kicker"><span class="spark">📅</span> YOLCULUĞUMUZ</div>
+        <h1>Değerli Anılarımız</h1>
+        <p class="sub">Paylaştığımız her an, değerli bir anıya dönüşüyor.</p>
+
+        <div class="timeline" id="timeline">
+          <div id="leftCol" style="display:flex; flex-direction:column; gap:22px; align-items:flex-start;"></div>
+          <div class="line" aria-hidden="true">
+            <span class="dot" style="top: 120px;"></span>
+            <span class="dot" style="top: 320px;"></span>
+          </div>
+          <div id="rightCol" style="display:flex; flex-direction:column; gap:22px; align-items:flex-end; padding-top:140px;"></div>
+        </div>
+
+        <div class="footer-heart">♥</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal -->
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Fotoğraf önizleme">
+    <div class="modal-card">
+      <button class="close" id="closeBtn" aria-label="Kapat">×</button>
+      <img id="modalImg" alt="Fotoğraf" />
+    </div>
+  </div>
+
+  <script>
+    /**************
+     * AYARLAR
+     **************/
+    const CONFIG = {
+      names: { a: "Yağmur", b: "Erberk" },
+      brand: "Y & E",
+      // Tarih formatı: "YYYY-MM-DDTHH:MM:SS" (TR saati için yerel çalışır)
+      anniversaryISO: "2025-10-29T00:00:00",
+      anniversaryPretty: "29 Ekim 2025",
+
+      // Galeri fotoğrafları:
+      // Fotoğrafları aynı klasöre "images" klasörü açıp koy:
+      // images/1.jpg, images/2.jpg ...
+      photos: [
+        { src: "images/1.jpg", cap: "Anı #1" },
+        { src: "images/2.jpg", cap: "Anı #2" },
+        { src: "images/3.jpg", cap: "Anı #3" },
+        { src: "images/4.jpg", cap: "Anı #4" },
+        { src: "images/5.jpg", cap: "Anı #5" },
+        { src: "images/6.jpg", cap: "Anı #6" },
+      ],
+
+      memories: [
+        {
+          side: "left",
+          date: "29 Ekim 2025",
+          title: "Tanıştığımız Gün",
+          text: "Yıldızlar hizalandı ve bizi bir araya getirdi. Her şeyi değiştiren bir an.",
+          icon: "✦"
+        },
+        {
+          side: "right",
+          date: "14 Şubat 2026",
+          title: "İlk Sevgililer Günü",
+          text: "Birlikte kutladığımız ilk aşk günü, kahkahalar ve neşeyle dolu.",
+          icon: "♥"
+        }
+      ]
+    };
+
+    /**************
+     * NAV / SAYFA GEÇİŞİ
+     **************/
+    const tabs = document.querySelectorAll(".tab");
+    const sections = {
+      home: document.getElementById("home"),
+      gallery: document.getElementById("gallery"),
+      memories: document.getElementById("memories")
+    };
+
+    function setActive(page){
+      tabs.forEach(t => t.classList.toggle("active", t.dataset.page === page));
+      Object.entries(sections).forEach(([k, el]) => {
+        el.classList.toggle("active", k === page);
+      });
+      history.replaceState(null, "", "#" + (page === "home" ? "anasayfa" : page === "gallery" ? "galeri" : "anilar"));
+    }
+
+    tabs.forEach(t => {
+      t.addEventListener("click", (e) => {
+        e.preventDefault();
+        setActive(t.dataset.page);
+      });
+    });
+
+    // Hash ile açılış
+    const hash = (location.hash || "").replace("#","").toLowerCase();
+    if(hash.includes("galeri")) setActive("gallery");
+    else if(hash.includes("anilar")) setActive("memories");
+    else setActive("home");
+
+    /**************
+     * METİNLER
+     **************/
+    document.getElementById("nameA").textContent = CONFIG.names.a;
+    document.getElementById("nameB").textContent = CONFIG.names.b;
+    document.getElementById("brandText").textContent = CONFIG.brand;
+    document.getElementById("anniversaryText").textContent = CONFIG.anniversaryPretty;
+
+    /**************
+     * SAYAC
+     **************/
+    const start = new Date(CONFIG.anniversaryISO).getTime();
+    const pad2 = (n) => String(n).padStart(2, "0");
+
+    function tick(){
+      const now = Date.now();
+      let diff = Math.max(0, now - start);
+
+      const sec = Math.floor(diff / 1000);
+      const days = Math.floor(sec / 86400);
+      const hours = Math.floor((sec % 86400) / 3600);
+      const mins = Math.floor((sec % 3600) / 60);
+      const secs = sec % 60;
+
+      document.getElementById("days").textContent = pad2(days);
+      document.getElementById("hours").textContent = pad2(hours);
+      document.getElementById("mins").textContent = pad2(mins);
+      document.getElementById("secs").textContent = pad2(secs);
+
+      requestAnimationFrame(() => {}); // yumuşak his
+    }
+    setInterval(tick, 1000);
+    tick();
+
+    /**************
+     * GALERİ OLUŞTUR
+     **************/
+    const grid = document.getElementById("galleryGrid");
+    CONFIG.photos.forEach((p) => {
+      const card = document.createElement("div");
+      card.className = "photo";
+      card.innerHTML = `
+        <img src="${p.src}" alt="${p.cap}">
+        <div class="cap">${p.cap}</div>
+      `;
+      card.addEventListener("click", () => openModal(p.src, p.cap));
+      grid.appendChild(card);
+    });
+
+    /**************
+     * ANILAR OLUŞTUR
+     **************/
+    const left = document.getElementById("leftCol");
+    const right = document.getElementById("rightCol");
+
+    function memCard(m){
+      const el = document.createElement("div");
+      el.className = "mem-card";
+      el.innerHTML = `
+        <div class="mem-meta">
+          <div class="badge">${m.icon}</div>
+          <span>${m.date}</span>
+        </div>
+        <h3>${m.title}</h3>
+        <p>${m.text}</p>
+      `;
+      return el;
+    }
+
+    CONFIG.memories.forEach(m => {
+      if(m.side === "right") right.appendChild(memCard(m));
+      else left.appendChild(memCard(m));
+    });
+
+    /**************
+     * MODAL
+     **************/
+    const modal = document.getElementById("modal");
+    const modalImg = document.getElementById("modalImg");
+    const closeBtn = document.getElementById("closeBtn");
+
+    function openModal(src, alt){
+      modalImg.src = src;
+      modalImg.alt = alt || "Fotoğraf";
+      modal.classList.add("open");
+    }
+    function closeModal(){
+      modal.classList.remove("open");
+      modalImg.src = "";
+    }
+    closeBtn.addEventListener("click", closeModal);
+    modal.addEventListener("click", (e) => { if(e.target === modal) closeModal(); });
+    window.addEventListener("keydown", (e) => { if(e.key === "Escape") closeModal(); });
+
+    /**************
+     * YILDIZ ARKAPLAN (canvas)
+     **************/
+    const c = document.getElementById("stars");
+    const ctx = c.getContext("2d");
+
+    let W, H, DPR;
+    let stars = [];
+
+    function resize(){
+      DPR = Math.min(2, window.devicePixelRatio || 1);
+      W = c.clientWidth = window.innerWidth;
+      H = c.clientHeight = window.innerHeight;
+      c.width = Math.floor(W * DPR);
+      c.height = Math.floor(H * DPR);
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      makeStars();
+    }
+
+    function makeStars(){
+      const count = Math.floor((W * H) / 12000);
+      stars = new Array(count).fill(0).map(() => ({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.4 + 0.2,
+        a: Math.random() * 0.7 + 0.2,
+        tw: Math.random() * 0.015 + 0.004,
+        sp: (Math.random() * 0.18 + 0.05) * (Math.random() < 0.5 ? -1 : 1)
+      }));
+    }
+
+    function draw(){
+      ctx.clearRect(0,0,W,H);
+
+      // hafif sis
+      ctx.fillStyle = "rgba(255,255,255,0.02)";
+      ctx.fillRect(0,0,W,H);
+
+      for(const s of stars){
+        // twinkle
+        s.a += s.tw * (Math.random() < 0.5 ? -1 : 1);
+        s.a = Math.max(0.12, Math.min(0.9, s.a));
+
+        // yavaş drift
+        s.x += s.sp * 0.08;
+        if(s.x < -10) s.x = W + 10;
+        if(s.x > W + 10) s.x = -10;
+
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(255,255,255,${s.a})`;
+        ctx.fill();
+      }
+
+      // ara sıra kayan yıldız
+      if(Math.random() < 0.012){
+        shoot();
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    function shoot(){
+      const x = Math.random() * W * 0.6 + W*0.2;
+      const y = Math.random() * H * 0.35 + H*0.08;
+      const len = Math.random() * 180 + 120;
+      const ang = Math.random() * 0.35 + 0.85; // sağ aşağı
+      const x2 = x + Math.cos(ang) * len;
+      const y2 = y + Math.sin(ang) * len;
+
+      const g = ctx.createLinearGradient(x,y,x2,y2);
+      g.addColorStop(0, "rgba(215,179,90,0.0)");
+      g.addColorStop(0.2, "rgba(215,179,90,0.25)");
+      g.addColorStop(1, "rgba(255,255,255,0.0)");
+
+      ctx.strokeStyle = g;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x,y);
+      ctx.lineTo(x2,y2);
+      ctx.stroke();
+    }
+
+    window.addEventListener("resize", resize);
+    resize();
+    draw();
+  </script>
+</body>
+</html>
